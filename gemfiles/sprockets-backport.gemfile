@@ -1,0 +1,9 @@
+source 'https://rubygems.org'
+
+# See:
+# https://github.com/rails/sprockets-rails/issues/98
+
+gemspec path: "../"
+gem "railties", github: "rails/rails"
+gem "propshaft", github: "rails/propshaft"
+gem "tzinfo"
