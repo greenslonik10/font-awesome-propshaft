@@ -16,12 +16,10 @@ and run `bundle install`.
 
 ## Usage
 
-In your `application.css`, include the css file:
+In your `application.html.erb`, include:
 
-```css
-/*
- *= require font-awesome-propshaft
- */
+```
+<%= stylesheet_link_tag "font-awesome-propshaft", "data-turbo-track": "reload" %>
 ```
 Then restart your webserver if it was previously running.
 
@@ -130,10 +128,6 @@ In addition you need to indicate the subfolder when you *precompile* the assets:
 
     RAILS_ENV=production bundle exec rake assets:precompile RAILS_RELATIVE_URL_ROOT=/myrailsapp
 
-### Rails 3.2
-
-**Note:** In Rails 3.2, make sure font-awesome-propshaft is outside the bundler asset group
-so that these helpers are automatically loaded in production environments.
 
 ## Versioning
 
