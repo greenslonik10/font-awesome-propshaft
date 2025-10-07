@@ -1,8 +1,27 @@
 require 'test_helper'
 require "propshaft/asset"
 require "propshaft/load_path"
+require "open3"
 
 class FontAwesomePropshaftRailsTest < ActionDispatch::IntegrationTest
+
+  setup do
+    @project_root = File.expand_path("..", __dir__)
+
+    @app_styles   = File.join(@project_root, "app", "assets", "stylesheets")
+    @dummy_styles = File.join(@project_root, "test", "dummy", "app", "assets", "stylesheets")
+    @builds_dir   = File.join(@project_root, "test", "dummy", "app", "assets", "builds")
+
+    FileUtils.mkdir_p(@builds_dir)
+  end
+
+  teardown do
+    if Dir.exist?(@builds_dir)
+      Dir.glob(File.join(@builds_dir, "*")).each do |file|
+        FileUtils.rm_rf(file)
+      end
+    end
+  end
 
   test "engine is loaded" do
     assert_equal ::Rails::Engine, FontAwesomePropshaft::Rails::Engine.superclass
@@ -50,38 +69,45 @@ class FontAwesomePropshaftRailsTest < ActionDispatch::IntegrationTest
     assert_match(/font-family:\s*'FontAwesome';/, css)
   end
 
-  test "sass import compiles correctly" do
-    asset = Rails.application.assets.load_path.find("sass-import.css.sass")
-    assert asset, "sass-import.css.sass not found in Propshaft load path"
+  test "SASS and SCSS imports compile correctly with DartSass" do
+    {
+      "sass-import.css.sass"   => "sass-import.css",
+      "scss-import.css.scss"   => "scss-import.css"
+    }.each do |src_file, out_file|
+      source = File.join(@dummy_styles, src_file)  
+      output = File.join(@builds_dir, out_file)    
 
-    source = File.read(asset.path)
-    engine = SassC::Engine.new(
-      source,
-      syntax: :sass,
-      load_paths: Rails.application.config.assets.paths
-    )
+      cmd = [
+        "bundle", "exec", "dartsass",
+        "#{source}:#{output}",
+        "--load-path", @app_styles,
+        "--load-path", @dummy_styles
+      ]
 
-    css = engine.render
-    assert_match(/font-family:\s*'FontAwesome';/, css, "sass-import.css.sass missing FontAwesome styles")
-  rescue SassC::SyntaxError => e
-    flunk "sass-import.css.sass failed to compile: #{e.message}"
-  end
+      stdout, stderr, status = nil
+      Dir.chdir(@project_root) do
+        stdout, stderr, status = Open3.capture3(*cmd)
+      end
 
-  test "scss import compiles correctly" do
-    asset = Rails.application.assets.load_path.find("scss-import.css.scss")
-    assert asset, "scss-import.css.scss not found in Propshaft load path"
+      unless status.success?
+        message = <<~MSG
+          DartSass compilation failed for #{src_file}
+          Exit status: #{status && status.exitstatus}
+          Command: #{cmd.join(" ")}
+          STDOUT:
+          #{stdout.to_s.strip.empty? ? "(empty)" : stdout}
+          STDERR:
+          #{stderr.to_s.strip.empty? ? "(empty)" : stderr}
+        MSG
 
-    source = File.read(asset.path)
-    engine = SassC::Engine.new(
-      source,
-      syntax: :scss,
-      load_paths: Rails.application.config.assets.paths
-    )
+        flunk message
+      end
 
-    css = engine.render
-    assert_match(/font-family:\s*'FontAwesome';/, css, "scss-import.css.scss missing FontAwesome styles")
-  rescue SassC::SyntaxError => e
-    flunk "scss-import.css.scss failed to compile: #{e.message}"
+      assert File.exist?(output), "Compiled #{out_file} not found at #{output}"
+
+      css = File.read(output)
+      assert_match(/font-family:\s*["']?FontAwesome["']?;/, css, "FontAwesome styles missing or formatted differently in #{out_file}")
+    end
   end
 
   test "helpers should be available in the view" do

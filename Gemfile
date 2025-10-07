@@ -6,5 +6,5 @@ gemspec
 group :development, :test do
   gem "guard", ">= 2.9"
   gem "guard-minitest"
-  gem "sassc"
+  gem "dartsass-rails"
 end

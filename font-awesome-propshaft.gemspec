@@ -9,17 +9,17 @@ Gem::Specification.new do |gem|
   gem.homepage      = "https://github.com/greenslonik10/font-awesome-propshaft"
   gem.licenses      = ["MIT", "Apache-2.0"]
 
-  gem.files = Dir["{app,bin,lib,test,spec}/**/*", "LICENSE*", "Rakefile", "README*"]
+  gem.files         = Dir["{app,bin,lib,test,spec}/**/*", "LICENSE*", "Rakefile", "README*"]
   gem.test_files    = `git ls-files -- {test,spec}/*`.split("\n")
   gem.name          = "font-awesome-propshaft"
   gem.require_paths = ["lib"]
   gem.version       = FontAwesomePropshaft::Rails::VERSION
 
-  gem.add_dependency "railties", ">= 7.0", "< 8.0"
-  gem.add_dependency "propshaft", "~> 5.1"
-  gem.add_dependency "sassc", "~> 2.4"
+  gem.add_dependency "railties", ">= 7.0", "< 9.0"
+  gem.add_dependency "propshaft", ">= 0.8", "< 2.0"
+  gem.add_dependency "dartsass-rails", ">= 0.4.0", "< 2.0"
 
-  gem.add_development_dependency "activesupport", "~> 8.1"
+  gem.add_development_dependency "activesupport", "~> 8.0"
 
   gem.required_ruby_version = '>= 1.9.3'
 end
